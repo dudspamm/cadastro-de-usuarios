@@ -39,7 +39,8 @@ def cadastro_funcionarios():
         print("\n=== Menu ===")
         print("1. Cadastrar Funcionário")
         print("2. Listar Funcionários")
-        print("3. Sair")
+        print("3. Remover Funcionário")
+        print("4. Sair")
         print("============")
 
         escolha = input("Escolha uma opção: ")
@@ -71,8 +72,21 @@ def cadastro_funcionarios():
                 else:
                     for id_func, dados_func in funcionarios_atualizados.items():
                         print(f"ID: {id_func}, Nome: {dados_func['nome']}, Cargo: {dados_func['cargo']}")
-            
+
             case '3':
+                print("\n--- Remover Funcionário ---")
+                id_remover= input("Digite o ID do funcionário para remover: ").strip()
+                # Recarrega os dados para garantir que temos a versão mais atual
+                funcionarios_atualizados = carregar_dados()
+                if id_remover in funcionarios_atualizados:
+                    del funcionarios_atualizados[id_remover]
+                    # SALVA OS DADOS NO ARQUIVO APÓS A REMOÇÃO
+                    salvar_dados(funcionarios_atualizados)
+                    print(f"Funcionário ID {id_remover} removido com sucesso.")
+                else:
+                    print(f"Erro: Funcionário ID {id_remover} não encontrado.")
+            
+            case '4':
                 print("\nEncerrando sistema. Até mais!")
                 break
             
