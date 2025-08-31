@@ -1,46 +1,84 @@
-def cadastro_funcionarios(): #Define uma função que contém todo o menu e lógica de cadastro.
+import json
+import os # Usaremos o 'os' para verificar se o arquivo existe
 
-    funcionarios = {} #cria um dicionário vazio para armazenar os funcionários cadastrados.
-    proximo_id = 1  #inicia com o valor 1, que será usada como chave (ID) única para cada funcionário cadastrado.
+# Nome do arquivo que vai funcionar como nosso "banco de dados"
+NOME_ARQUIVO = 'funcionarios.json'
 
-    while True: #Cria um loop infinito, e o programa só sai quando usar break. Isso mantém o menu ativo.
-        print("=== Menu ==")
+def carregar_dados():
+    """Lê os dados do arquivo JSON e os retorna como um dicionário."""
+    if not os.path.exists(NOME_ARQUIVO):
+        return {} # Se o arquivo não existe, retorna um dicionário vazio
+    
+    try:
+        with open(NOME_ARQUIVO, 'r', encoding='utf-8') as f:
+            # json.load() lê o arquivo e transforma o JSON em um dicionário Python
+            return json.load(f)
+    except json.JSONDecodeError:
+        # Se o arquivo estiver vazio ou corrompido, retorna um dicionário vazio
+        return {}
+
+def salvar_dados(dados):
+    """Salva os dados (dicionário) no arquivo JSON."""
+    with open(NOME_ARQUIVO, 'w', encoding='utf-8') as f:
+        # json.dump() pega um objeto Python e o escreve no arquivo em formato JSON
+        # indent=4 deixa o arquivo formatado e legível para humanos
+        json.dump(dados, f, indent=4)
+
+def cadastro_funcionarios():
+    # Carrega os funcionários que já estavam salvos
+    funcionarios = carregar_dados()
+    
+    # Calcula o próximo ID baseado no maior ID que já existe
+    if funcionarios:
+        # Pega todas as chaves (IDs), converte para inteiros e pega o maior. Soma 1.
+        proximo_id = max(int(k) for k in funcionarios.keys()) + 1
+    else:
+        proximo_id = 1
+
+    while True:
+        print("\n=== Menu ===")
         print("1. Cadastrar Funcionário")
         print("2. Listar Funcionários")
         print("3. Sair")
-        print("===========")
+        print("============")
 
-        escolha = input("Escolha uma opção: ") #lê a entrada do usuário e armazena na variável escolha.
+        escolha = input("Escolha uma opção: ")
 
-        match escolha: #estrutura para verificar e controlar a opção digitada.
+        match escolha:
             case '1':
-                print("--- Cadastrar Funcionário ---")
-                nome = input("Nome: ")
-                cargo = input("Cargo: ")
+                print("\n--- Cadastrar Funcionário ---")
+                nome = input("Nome: ").strip()
+                cargo = input("Cargo: ").strip()
 
-                if nome and cargo:  #verifica se ambos os campos foram preenchidos (não vazios).
-                    funcionarios[proximo_id] = {"nome": nome, "cargo": cargo}  #adiciona ao dicionário funcionarios uma nova entrada.
-                    print(f"Funcionário '{nome}' (ID: {proximo_id}) cadastrado com sucesso!") #exibe mensagem confirmando o cadastro.
-                    proximo_id += 1  #Adiciona 1 no proximo ID de cadastro de funcionário
+                if nome and cargo:
+                    # Adiciona ao dicionário. Note que proximo_id precisa ser string para ser chave de JSON
+                    funcionarios[str(proximo_id)] = {"nome": nome, "cargo": cargo}
+                    
+                    # SALVA OS DADOS NO ARQUIVO APÓS O CADASTRO
+                    salvar_dados(funcionarios)
+
+                    print(f"Funcionário '{nome}' (ID: {proximo_id}) cadastrado com sucesso!")
+                    proximo_id += 1
                 else:
-                    print("Erro: Insira os dados corretos. Funcionário não cadastrado.") #se o usuário não preencher nome ou cargo, exibe mensagem de erro.
-
+                    print("Erro: Insira os dados corretos. Funcionário não cadastrado.")
+            
             case '2':
-                print("--- Lista de Funcionários ---")
-                if not funcionarios: #verifica se o dicionário está vazio e, se sim, informa que não há funcionários cadastrados.
+                print("\n--- Lista de Funcionários ---")
+                # Recarrega os dados para garantir que temos a versão mais atual
+                funcionarios_atualizados = carregar_dados()
+                if not funcionarios_atualizados:
                     print("Nenhum funcionário cadastrado ainda.")
                 else:
-
-                    for id_func, dados_func in funcionarios.items(): #caso existam funcionários itera sobre cada item do dicionário. Exibe o ID, nome e cargo de cada funcionário.
+                    for id_func, dados_func in funcionarios_atualizados.items():
                         print(f"ID: {id_func}, Nome: {dados_func['nome']}, Cargo: {dados_func['cargo']}")
-
+            
             case '3':
-                print("Encerando sistema. Até mais!") #exibe mensagem de despedida e usa break para sair do loop.
+                print("\nEncerrando sistema. Até mais!")
                 break
-
+            
             case _:
-                print("Opção inválida. Por favor, tente novamente.") #caso nenhuma opção acima seja escolhida, executa este bloco (opção inválida).
+                print("\nOpção inválida. Por favor, tente novamente.")
 
-
-if __name__ == "__main__": #Verifica se o script está sendo executado diretamente (não importado). Se sim, chama a função principal cadastro_funcionarios()
-  cadastro_funcionarios()
+# Verifica se o script está sendo executado diretamente e chama a função principal
+if __name__ == "__main__":
+    cadastro_funcionarios()
